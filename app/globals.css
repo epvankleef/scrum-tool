@@ -1,0 +1,50 @@
+@import "tailwindcss";
+
+@theme {
+  /* Papier-palet */
+  --color-paper: #f6f3ee;
+  --color-paper-dark: #ece5d5;
+  --color-ink: #2b2618;
+
+  /* Kolom-kleuren (Scrum School-palet) */
+  --color-col-backlog: #5b2e8c;   /* paars: Product/Sprint Backlog */
+  --color-col-todo: #d63f7a;      /* roze: To Do */
+  --color-col-busy: #e8671a;      /* oranje: Busy */
+  --color-col-testen: #f2a54a;    /* licht-oranje: testen/bespreken */
+  --color-col-done: #4fa34f;      /* groen: Done */
+
+  /* Sticky-kleuren */
+  --color-sticky-yellow: #fff176;
+  --color-sticky-pink: #f8bbd0;
+  --color-sticky-blue: #b3e5fc;
+  --color-sticky-green: #c5e1a5;
+
+  /* Fonts — worden gezet via next/font CSS variables */
+  --font-sans: var(--font-inter), system-ui, sans-serif;
+  --font-caveat: var(--font-caveat), "Segoe Script", cursive;
+}
+
+html, body {
+  background: var(--color-paper);
+  color: var(--color-ink);
+}
+
+/* Subtiele papier-ruis over de hele achtergrond */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  background-image:
+    radial-gradient(circle at 20% 30%, rgba(0,0,0,0.015) 0 1px, transparent 1px),
+    radial-gradient(circle at 70% 60%, rgba(0,0,0,0.02)  0 1px, transparent 1px),
+    radial-gradient(circle at 40% 80%, rgba(0,0,0,0.015) 0 1px, transparent 1px);
+  background-size: 3px 3px, 5px 5px, 7px 7px;
+  mix-blend-mode: multiply;
+  z-index: 0;
+}
+
+main, .layer {
+  position: relative;
+  z-index: 1;
+}

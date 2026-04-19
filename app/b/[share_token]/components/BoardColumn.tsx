@@ -28,15 +28,17 @@ export default function BoardColumn({ config, stickies, onAdd, onOpen, draggingS
         style={{ background: config.headerBg, color: config.headerFg }}
       >
         <span className="text-sm font-medium tracking-tight truncate">{config.label}</span>
-        <button
-          type="button"
-          onClick={() => onAdd(config.key)}
-          className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-white/15 hover:bg-white/30 transition leading-none text-sm"
-          aria-label={`Nieuwe sticky in ${config.label}`}
-          title="Nieuwe sticky"
-        >
-          +
-        </button>
+        {showAddButton && (
+          <button
+            type="button"
+            onClick={() => onAdd(config.key)}
+            className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-white/15 hover:bg-white/30 transition leading-none text-sm"
+            aria-label={`Nieuwe sticky in ${config.label}`}
+            title="Nieuwe sticky"
+          >
+            +
+          </button>
+        )}
       </header>
 
       <div
@@ -58,6 +60,12 @@ export default function BoardColumn({ config, stickies, onAdd, onOpen, draggingS
                 sticky={s}
                 onOpen={onOpen}
                 isDragging={draggingStickyId === s.id}
+                storyNumber={s.kind === 'story' ? storyNumberMap.get(s.id) : undefined}
+                parentStoryNumber={
+                  s.kind === 'task' && s.parent_sticky_id
+                    ? storyNumberMap.get(s.parent_sticky_id)
+                    : undefined
+                }
               />
             ))}
             {stickies.length === 0 && (

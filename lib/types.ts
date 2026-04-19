@@ -3,8 +3,9 @@ export type StickyColumn =
   | 'sprint_backlog'
   | 'todo'
   | 'busy'
-  | 'testen'
   | 'done';
+
+export type StickyKind = 'story' | 'task';
 
 export type StickyColor = 'yellow' | 'pink' | 'blue' | 'green';
 
@@ -42,6 +43,7 @@ export interface Sticky {
   id: string;
   project_id: string;
   sprint_id: string | null;
+  kind: StickyKind;
   board_column: StickyColumn;
   position: number;
   parent_sticky_id: string | null;

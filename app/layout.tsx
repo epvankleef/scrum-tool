@@ -27,7 +27,7 @@ export default function RootLayout({
       lang="nl"
       className={`${caveat.variable} ${inter.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col font-sans">{children}</body>
+      <body className="h-screen flex flex-col overflow-hidden font-sans p-4 gap-4">{children}</body>
     </html>
   );
 }

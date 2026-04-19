@@ -19,7 +19,7 @@ export default function StickyCard({ sticky, onOpen, isDragging: externalDraggin
   });
 
   const dragging = isDragging || externalDragging;
-  const baseRotate = sticky.kind === 'story' ? 0 : sticky.rotation ?? 0;
+  const baseRotate = sticky.rotation ?? 0;
   const isStory = sticky.kind === 'story';
 
   const style: React.CSSProperties = {
@@ -43,6 +43,7 @@ export default function StickyCard({ sticky, onOpen, isDragging: externalDraggin
         className="story-card"
         style={style}
       >
+        <div className="sticky-tape" aria-hidden />
         <div className="story-badge">Story #{storyNumber ?? '?'}</div>
         <div className="story-text">
           {sticky.text || <span className="opacity-40">Nieuwe user story &mdash; klik om te bewerken</span>}

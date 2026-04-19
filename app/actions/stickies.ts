@@ -13,8 +13,8 @@ async function projectIdForToken(shareToken: string): Promise<string> {
   return data.id as string;
 }
 
-function randomRotation(): number {
-  return Math.round((Math.random() * 3 - 1.5) * 10) / 10;
+function randomRotation(range = 1.5): number {
+  return Math.round((Math.random() * range * 2 - range) * 10) / 10;
 }
 
 function validateColumnForKind(kind: StickyKind, column: StickyColumn): void {
@@ -47,6 +47,20 @@ export async function createSticky(
   const db = supabaseAdmin();
   const project_id = await projectIdForToken(shareToken);
 
+  if (input.kind === 'task' && input.parent_sticky_id) {
+    const { data: parent } = await db
+      .from('sticky')
+      .select('kind, board_column, project_id')
+      .eq('id', input.parent_sticky_id)
+      .maybeSingle();
+    if (!parent || parent.project_id !== project_id || parent.kind !== 'story') {
+      throw new Error('parent must be a story in this project');
+    }
+    if (parent.board_column !== 'sprint_backlog') {
+      throw new Error('TASK_PARENT_NOT_IN_SPRINT_BACKLOG');
+    }
+  }
+
   const { data: last } = await db
     .from('sticky')
     .select('position')
@@ -70,7 +84,7 @@ export async function createSticky(
       color: input.color ?? 'yellow',
       assignee_initials: input.assignee_initials ?? null,
       estimate: input.estimate ?? null,
-      rotation: input.kind === 'story' ? 0 : randomRotation(),
+      rotation: input.kind === 'story' ? randomRotation(0.8) : randomRotation(),
     })
     .select('*')
     .single();
@@ -86,7 +100,8 @@ export async function updateSticky(
   const db = supabaseAdmin();
   const project_id = await projectIdForToken(shareToken);
 
-  // If column is changing, validate against kind
+  // If column is changing, validate against kind.
+  // Extra: a story can only move to Done if all its tasks are already Done.
   if (fields.board_column) {
     const { data: current } = await db
       .from('sticky')
@@ -96,6 +111,18 @@ export async function updateSticky(
       .single();
     if (current?.kind) {
       validateColumnForKind(current.kind as StickyKind, fields.board_column);
+      if (current.kind === 'story' && fields.board_column === 'done') {
+        const { data: tasks } = await db
+          .from('sticky')
+          .select('board_column')
+          .eq('parent_sticky_id', stickyId)
+          .eq('project_id', project_id);
+        const list = tasks ?? [];
+        const hasUnfinished = list.some((t) => t.board_column !== 'done');
+        if (hasUnfinished) {
+          throw new Error('STORY_NOT_ALL_TASKS_DONE');
+        }
+      }
     }
   }
 

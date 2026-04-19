@@ -37,7 +37,24 @@ export default function BoardClient({ project, initialStickies }: Props) {
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [taskCreatorFor, setTaskCreatorFor] = useState<StickyColumn | null>(null);
   const [activeDragId, setActiveDragId] = useState<UniqueIdentifier | null>(null);
+  const [toast, setToast] = useState<string | null>(null);
   const [, startTransition] = useTransition();
+
+  function showToast(message: string, ms = 3000) {
+    setToast(message);
+    window.setTimeout(() => setToast((t) => (t === message ? null : t)), ms);
+  }
+
+  function humanError(err: unknown): string {
+    const msg = err instanceof Error ? err.message : String(err);
+    if (msg.includes('STORY_NOT_ALL_TASKS_DONE')) {
+      return 'Deze user story kan pas op Done als alle bijbehorende taken in Done staan.';
+    }
+    if (msg.includes('TASK_PARENT_NOT_IN_SPRINT_BACKLOG')) {
+      return 'De gekoppelde user story moet eerst in de Sprint Backlog staan.';
+    }
+    return 'Actie mislukt — probeer het opnieuw.';
+  }
 
   const stickyById = useMemo(() => {
     const map = new Map<string, Sticky>();
@@ -128,6 +145,7 @@ export default function BoardClient({ project, initialStickies }: Props) {
           resolve(sticky);
         } catch (err) {
           console.error(err);
+          showToast(humanError(err));
           resolve();
         }
       });
@@ -135,6 +153,7 @@ export default function BoardClient({ project, initialStickies }: Props) {
   }
 
   function handleSaveSticky(id: string, patch: Partial<Sticky>) {
+    const snapshot = stickies;
     setStickies((prev) => prev.map((s) => (s.id === id ? { ...s, ...patch } : s)));
     startTransition(async () => {
       try {
@@ -142,6 +161,8 @@ export default function BoardClient({ project, initialStickies }: Props) {
         mergeStickies(updated);
       } catch (err) {
         console.error(err);
+        setStickies(snapshot);
+        showToast(humanError(err));
       }
     });
   }
@@ -211,6 +232,7 @@ export default function BoardClient({ project, initialStickies }: Props) {
 
     const newPosition = positionBetween(prev, next);
     const patch: Partial<Sticky> = { board_column: targetColumn, position: newPosition };
+    const snapshot = stickies;
     setStickies((current) => current.map((s) => (s.id === dragged.id ? { ...s, ...patch } : s)));
     startTransition(async () => {
       try {
@@ -218,6 +240,8 @@ export default function BoardClient({ project, initialStickies }: Props) {
         mergeStickies(updated);
       } catch (err) {
         console.error(err);
+        setStickies(snapshot);
+        showToast(humanError(err));
       }
     });
   }
@@ -317,6 +341,15 @@ export default function BoardClient({ project, initialStickies }: Props) {
           onCreate={(input) => handleCreateTask(taskCreatorFor, input)}
           onClose={() => setTaskCreatorFor(null)}
         />
+      )}
+
+      {toast && (
+        <div
+          className="fixed top-4 left-1/2 -translate-x-1/2 z-[60] px-4 py-2.5 rounded-full bg-neutral-900 text-white text-sm shadow-lg animate-in fade-in"
+          role="status"
+        >
+          {toast}
+        </div>
       )}
     </>
   );
